@@ -37,12 +37,26 @@ namespace RobloxLauncher.BETA
             bar.State = TaskDialogProgressBarState.Marquee;
             dialog.Controls.Add(bar);
 
+            dialog.StandardButtons = TaskDialogStandardButtons.None;
+
             backgroundWorker1.RunWorkerCompleted += (s, ev) =>
             {
-                dialog.Close();
+                try
+                {
+                    dialog.Close(TaskDialogResult.Ok);
+                }
+                catch { }
             };
 
+            dialog.InstructionText = "Launching Roblox...";
+            dialog.Text = "Getting Authentication Url, Ticket, and Join Script.";
+            dialog.Closing += dialog_Closing;
             dialog.Show();
+        }
+
+        void dialog_Closing(object sender, TaskDialogClosingEventArgs e)
+        {
+            Console.WriteLine(e.TaskDialogResult);
         }
 
         void dialog_Opened(object sender, EventArgs e)
@@ -68,19 +82,25 @@ namespace RobloxLauncher.BETA
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
+            TaskDialog dialog = (TaskDialog)e.Argument;
             WebClient client = new WebClient();
+            launcher.ResetLaunchState();
             string read = client.DownloadString(new Uri("http://www.roblox.com/Game/PlaceLauncher.ashx?request=RequestGame&placeId=1818"));
             PlaceLauncherResp resp = Newtonsoft.Json.JsonConvert.DeserializeObject<PlaceLauncherResp>(read);
             launcher.Update();
+            dialog.Text = "Setting Auth Ticket";
             launcher.AuthenticationTicket = resp.authenticationTicket;
             launcher.Update();
+            dialog.Text = "Pre-Start Stage.";
             launcher.BringAppToFront();
 
             launcher.PreStartGame();
 
             launcher.Update();
 
+            dialog.Text = "Starting ROBLOX with Auth and Join Script.";
             launcher.StartGame(resp.authenticationUrl, resp.joinScriptUrl);
+           
             e.Result = true;
         }
     }
