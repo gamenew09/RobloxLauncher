@@ -17,12 +17,10 @@ namespace RobloxLauncher.BETA
     public partial class Form1 : Form
     {
         RobloxProxyLib.Launcher launcher;
-        LauncherWrapper wrapper;
 
         public Form1()
         {
             launcher = new RobloxProxyLib.Launcher();
-            wrapper = new LauncherWrapper();
             InitializeComponent();
             
         }
@@ -79,13 +77,14 @@ namespace RobloxLauncher.BETA
             public string authenticationTicket { get; set; }
         }
 
-
+        // Problem might happen when an update is requested, so I'll have to be careful.
+        // Might also need to create a Wrapper to handle it, so I'll keep the Wrapper in the project for now.
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             TaskDialog dialog = (TaskDialog)e.Argument;
             WebClient client = new WebClient();
             launcher.ResetLaunchState();
-            string read = client.DownloadString(new Uri("http://www.roblox.com/Game/PlaceLauncher.ashx?request=RequestGame&placeId=1818"));
+            string read = client.DownloadString(new Uri("http://www.roblox.com/Game/PlaceLauncher.ashx?request=RequestGame&placeId="+textBox1.Text));
             PlaceLauncherResp resp = Newtonsoft.Json.JsonConvert.DeserializeObject<PlaceLauncherResp>(read);
             launcher.Update();
             dialog.Text = "Setting Auth Ticket";
